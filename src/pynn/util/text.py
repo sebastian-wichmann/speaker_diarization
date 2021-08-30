@@ -1,4 +1,5 @@
 # Copyright 2019 Thai-Son Nguyen
+# Copyright 2021 Sebastian Wichmann
 # Licensed under the Apache License, Version 2.0 (the "License")
 
 import math
@@ -126,6 +127,24 @@ def write_stm(hypos, utts, fout):
         hypo = [w for w,s in hypo]
         stime, etime = float(stime), float(etime)
         fout.write('%s 1 %s %.2f %.2f %s\n' % (conv, conv, stime, etime, ' '.join(hypo)))
+
+def write_lbl(hypos, utts, fout):
+    for hypo, utt in zip(hypos, utts):
+        conv, stime, etime = parse_time_info(utt)
+        #hypo = [w for w,s in hypo]
+        stime, etime = float(stime), float(etime)
+
+        fout.write("# {}\n".format(utt))
+        for p, h in zip(hypo[0], hypo[1]):
+            fout.write("{} {} {} {} {}\n".format(conv, stime, etime, h, p))
+
+def write_rttm(hypos, utts, fout):
+    for hypo, utt in zip(hypos, utts):
+        conv, stime, etime = parse_time_info(utt)
+        #hypo = [w for w,s in hypo]
+        stime, etime = float(stime), float(etime)
+
+        fout.write("SPEAKER {} 1 {} {} <NA> <NA> {} <NA> <NA>\n".format(conv, stime, (etime - stime), hypo[1][0]))
 
 def write_text(hypos, utts, fout):
     for hypo, utt in zip(hypos, utts):
