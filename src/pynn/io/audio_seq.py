@@ -1,4 +1,5 @@
 # Copyright 2019 Thai-Son Nguyen
+# Copyright 2021 Sebastian Wichmann
 # Licensed under the Apache License, Version 2.0 (the "License")
 
 import random
@@ -87,13 +88,13 @@ class SpectroDataset(Dataset):
             if self.paired_label:
                 sp = tokens.index('|', 1)
                 lb1 = [int(token) for token in tokens[1:sp]]
-                lb1 = [1] + [el+2 for el in lb1] + [2] if self.sek else lb1
+                # lb1 = [el for el in lb1] + [2] if self.sek else lb1
                 lb2 = [int(token) for token in tokens[sp+1:]]
-                lb2 = [1] + [el+2 for el in lb2] + [2] if self.sek else lb2
+                # lb2 = [1] + [el+2 for el in lb2] + [2] if self.sek else lb2
                 lbl = (lb1, lb2)
             else:
                 lbl = [int(token) for token in tokens[1:]]
-                lbl = [1] + [el+2 for el in lbl] + [2] if self.sek else lbl
+                #lbl = [1] + [el+2 for el in lbl] + [2] if self.sek else lbl
             labels[utt_id] = lbl
 
         utt_lbl = []
@@ -275,8 +276,8 @@ class SpectroDataset(Dataset):
             return None
 
         utt_lbl = self.label_dic[utt_id]
-        if self.sek:
-            utt_lbl = [1] + [el+2 for el in utt_lbl] + [2]
+        # if self.sek:
+            # utt_lbl = [1] + [el+2 for el in utt_lbl] + [2]
         return utt_lbl
 
     def timefreq_drop_inst(self, inst, num=2, time_drop=0.4, freq_drop=0.4):

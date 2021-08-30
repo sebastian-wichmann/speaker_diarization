@@ -1,4 +1,5 @@
 # Copyright 2019 Thai-Son Nguyen
+# Copyright 2019 Sebastian Wichmann
 # Licensed under the Apache License, Version 2.0 (the "License")
 
 import time
@@ -27,8 +28,8 @@ def train_epoch(model, data, opt, eps, device, b_update, b_sync, n_print,
     for batch_i, batch in enumerate(loader):
         # prepare data
         src_seq, src_mask, tgt_seq = map(lambda x: x.to(device), batch)
-        gold = tgt_seq[:, 1:]
-        tgt_seq = tgt_seq[:, :-1]
+        gold = tgt_seq #tgt_seq[:, 1:]
+        #tgt_seq = tgt_seq[:, :-1]
         last = (batch_i == data_len)
         n_seq += tgt_seq.size(0)
 
@@ -99,8 +100,8 @@ def eval_epoch(model, data, device, fp16=False):
         for batch_i, batch in enumerate(loader):
             # prepare data
             src_seq, src_mask, tgt_seq = map(lambda x: x.to(device), batch)
-            gold = tgt_seq[:, 1:]
-            tgt_seq = tgt_seq[:, :-1]
+            gold = tgt_seq # [:, 1:]
+            #tgt_seq = tgt_seq[:, :-1]
 
             # forward
             with autocast(enabled=fp16):
