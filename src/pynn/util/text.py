@@ -103,6 +103,10 @@ def write_hypo(hypos, scores, fout, utts, dic, word_dic=None, space='', output='
         write_ctm(hypos, utts, fout)
     elif output == 'stm':
         write_stm(hypos, utts, fout)
+    elif output == 'lbl':
+        write_lbl(hypos, utts, fout)
+    elif output == 'rttm':
+        write_rttm(hypos, utts, fout)
     else:
         write_text(hypos, utts, fout)
      
