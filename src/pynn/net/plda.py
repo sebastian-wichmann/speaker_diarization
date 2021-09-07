@@ -77,6 +77,23 @@ class PLDA(nn.Module):
         divisor = torch.sqrt(((2 * math.pi) ** vector.size()[0]) * lin.norm(deviation_inv))
         return torch.exp(exp) / divisor
 
+    def calculate_probability_multi(self, v1, v2, deviation_inv):  #TODO: deviation_inv wrong maybe not inv?
+        v = torch.cat(v1, v2)
+        mean = torch.mean(v, 0)
+
+        v1_size, v2 size =  v1.size()[0], v2.size()[0]
+        size = v1_size + v2 size
+
+        to_mult = []
+        for t in range(deviation_inv.size()[0]):
+            tmp = deviation_inv[t] + (1 / n)
+
+            exp = (-1) * (((mean[t] ** 2) / (2 * tmp)) + sum([ ((v[i][t] - mean[t]) ** 2) for i in range(size) ]) / 2) #TODO: replace vector multiplikation
+            divisor = math.sqrt(((math.pi * 2) ** size) * tmp)
+            to_mult.append((1 / divisor) * torch.exp(exp))
+        
+        return mult(to_mult)
+
     def forward(self, src_seq, src_mask, tgt_seq):
         if self.training:
             self.fit_model(src_mask, tgt_seq)
