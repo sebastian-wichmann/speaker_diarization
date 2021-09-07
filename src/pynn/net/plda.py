@@ -10,7 +10,7 @@ import math
 
 
 class PLDA(nn.Module):
-    def __init__(self, dropout=0.2):
+    def __init__(self, dropout=0.2, dropconnect=0.2):
         super(PLDA, self).__init__()
 
         self.dropout_net = nn.Dropout(dropout)
