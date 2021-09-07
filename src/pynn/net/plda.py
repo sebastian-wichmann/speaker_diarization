@@ -96,5 +96,39 @@ class PLDA(nn.Module):
 
     def forward(self, src_seq, src_mask, tgt_seq):
         if self.training:
-            self.fit_model(src_mask, tgt_seq)
-            return
+            self.fit_model(src_seq, src_mask)
+
+        latent = torch.matmul(self.A_inverse, (src_seq - self.mean))
+
+        cluster = [ [i] for i in range(0, latent.size()[0]) ]
+        l = 0
+        l_new = 0
+
+        while l <= l_new:
+            l = l_new
+
+            max_cluster = None
+            cluster_ids = (None, None)
+
+                
+            for x in len(cluster):
+                cluster_1 = cluster[x]
+                for y in range(x + 1, len(cluster)):
+                    cluster_2 = cluster[y]
+                    if  (len(cluster_1) <= 1) and (len(cluster_2) <= 1):
+                        probability = calculate_probability_single(latent[cluster_1], latent[cluster_2], self.psi_diag)
+                    else:
+                        probability = calculate_probability_multi(latent[cluster_1], latent[cluster_2], self.psi_diag)
+                    
+                    if (max_cluster is None) or (max_cluster < probability):
+                        max_cluster = probability
+                        cluster_ids = (x, y)
+            
+            # join cluster
+            dest, source = cluster_ids
+            cluster[dest] = cluster[dest] + cluster[source]
+            cluster = del cluster[source]
+
+            l_new += max_cluster
+            
+        return cluster
