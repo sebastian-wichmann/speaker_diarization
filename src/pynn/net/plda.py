@@ -10,8 +10,10 @@ import math
 
 
 class PLDA(nn.Module):
-    def __init__(self, n_classes=1000, d_input=40, d_output=320, in_dropout=0.2):
+    def __init__(self, dropout=0.2):
         super(PLDA, self).__init__()
+
+        self.dropout_net = nn.Dropout(dropout)
 
     def compute_scatter_matrices(self, src_seq, src_mask):
         count_per_class = torch.count_nonzero(src_mask)
@@ -95,10 +97,12 @@ class PLDA(nn.Module):
         return mult(to_mult)
 
     def forward(self, src_seq, src_mask, tgt_seq):
-        if self.training:
-            self.fit_model(src_seq, src_mask)
+        seq = self.dropout_net(src_seq)
 
-        latent = torch.matmul(self.A_inverse, (src_seq - self.mean))
+        if self.training:
+            self.fit_model(seq, src_mask)
+
+        latent = torch.matmul(self.A_inverse, (seq - self.mean))
 
         cluster = [ [i] for i in range(0, latent.size()[0]) ]
         l = 0
