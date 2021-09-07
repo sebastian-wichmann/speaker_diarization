@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.linalg as lin
 import torch.nn.functional as F
+import math
 
 
 class PLDA(nn.Module):
@@ -73,8 +74,8 @@ class PLDA(nn.Module):
     def calculate_probability(self, vector, mean, deviation_inv):
         vm = vector - mean
         exp = -vm * deviation_inv * torch.transpose(vm)
-
-
+        divisor = torch.sqrt((2 * math.pi) ** vector.size()[0] * lin.norm(deviation_inv))
+        return torch.exp(exp) / divisor
 
     def forward(self, src_seq, src_mask, tgt_seq, fit_model_parameter=False):
         if fit_model_parameter:
