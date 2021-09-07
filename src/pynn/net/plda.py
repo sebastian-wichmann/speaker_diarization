@@ -71,10 +71,10 @@ class PLDA(nn.Module):
             self.psi_diag[index] = vectors
             return True
 
-    def calculate_probability(self, vector, mean, deviation_inv):
+    def calculate_probability_single(self, vector, mean, deviation_inv): #TODO: deviation_inv wrong maybe not inv?
         vm = vector - mean
-        exp = -vm * deviation_inv * torch.transpose(vm)
-        divisor = torch.sqrt((2 * math.pi) ** vector.size()[0] * lin.norm(deviation_inv))
+        exp = torch.matmul(torch.matmul(-vm, deviation_inv.diag), vm)
+        divisor = torch.sqrt(((2 * math.pi) ** vector.size()[0]) * lin.norm(deviation_inv))
         return torch.exp(exp) / divisor
 
     def forward(self, src_seq, src_mask, tgt_seq):
