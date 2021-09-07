@@ -77,7 +77,7 @@ class PLDA(nn.Module):
         divisor = torch.sqrt((2 * math.pi) ** vector.size()[0] * lin.norm(deviation_inv))
         return torch.exp(exp) / divisor
 
-    def forward(self, src_seq, src_mask, tgt_seq, fit_model_parameter=False):
-        if fit_model_parameter:
+    def forward(self, src_seq, src_mask, tgt_seq):
+        if self.training:
             self.fit_model(src_mask, tgt_seq)
             return
