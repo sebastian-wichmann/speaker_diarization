@@ -59,7 +59,7 @@ def signal_to_fft(signal, sample_rate, nfft):
     # frames *= 0.54 - 0.46 * np.cos((2 * np.pi * n) / (frame_length - 1))
 
     # Magnitude of the FFT
-    mag_frames = np.absolute(np.fft.rfft(frames, nfft), dtype="float32")
+    mag_frames = np.absolute(np.fft.rfft(frames, nfft), dtype="float32", casting="unsafe")
     # Power Spectrum
     pow_frames = ((1.0 / nfft) * ((mag_frames) ** 2))
 
