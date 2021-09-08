@@ -69,7 +69,7 @@ class PLDA(nn.Module):
             return False
         else:
             self.psi_diag = torch.zeros(self.psi_diag.size())
-            vectors, index = psi_diag_full.topk(dimension, -1)
+            vectors, index = self.psi_diag_full.topk(dimension, -1)
             self.psi_diag[index] = vectors
             return True
 
@@ -83,18 +83,18 @@ class PLDA(nn.Module):
         v = torch.cat(v1, v2)
         mean = torch.mean(v, 0)
 
-        v1_size, v2 size =  v1.size()[0], v2.size()[0]
-        size = v1_size + v2 size
+        v1_size, v2_size =  v1.size()[0], v2.size()[0]
+        size = v1_size + v2_size
 
         to_mult = []
         for t in range(deviation_inv.size()[0]):
-            tmp = deviation_inv[t] + (1 / n)
+            tmp = deviation_inv[t] + (1 / size)
 
             exp = (-1) * (((mean[t] ** 2) / (2 * tmp)) + sum([ ((v[i][t] - mean[t]) ** 2) for i in range(size) ]) / 2) #TODO: replace vector multiplikation
             divisor = math.sqrt(((math.pi * 2) ** size) * tmp)
             to_mult.append((1 / divisor) * torch.exp(exp))
         
-        return mult(to_mult)
+        return math.prod(to_mult)
 
     def forward(self, src_seq, src_mask, tgt_seq):
         seq = self.dropout_net(src_seq)
@@ -120,9 +120,9 @@ class PLDA(nn.Module):
                 for y in range(x + 1, len(cluster)):
                     cluster_2 = cluster[y]
                     if  (len(cluster_1) <= 1) and (len(cluster_2) <= 1):
-                        probability = calculate_probability_single(latent[cluster_1], latent[cluster_2], self.psi_diag)
+                        probability = self.calculate_probability_single(latent[cluster_1], latent[cluster_2], self.psi_diag)
                     else:
-                        probability = calculate_probability_multi(latent[cluster_1], latent[cluster_2], self.psi_diag)
+                        probability = self.calculate_probability_multi(latent[cluster_1], latent[cluster_2], self.psi_diag)
                     
                     if (max_cluster is None) or (max_cluster < probability):
                         max_cluster = probability
@@ -131,7 +131,7 @@ class PLDA(nn.Module):
             # join cluster
             dest, source = cluster_ids
             cluster[dest] = cluster[dest] + cluster[source]
-            cluster = del cluster[source]
+            del cluster[source]
 
             l_new += max_cluster
             
