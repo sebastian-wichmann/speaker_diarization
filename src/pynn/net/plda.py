@@ -16,7 +16,9 @@ class PLDA(nn.Module):
         self.dropout_net = nn.Dropout(dropout)
 
     def compute_scatter_matrices(self, src_seq):
+        count_classes = src_seq.size()[0]
         count_per_class = src_seq.size()[1]
+        count_feature = src_seq.size()[2]
         count = src_seq.size()[0] * count_per_class
 
         mean_per_class = torch.mean(src_seq, 1)
@@ -25,9 +27,26 @@ class PLDA(nn.Module):
         diff_src_mk = src_seq - mean_per_class.unsqueeze(1).expand(-1, src_seq.size()[1], -1)
         diff_m_mk = mean_per_class - mean.unsqueeze(0).expand(mean_per_class.size()[0], -1)
 
-        S_w_k = torch.matmul(diff_src_mk.transpose(1, 2), diff_src_mk)
-        S_b_k = torch.matmul(torch.matmul(diff_m_mk.unsqueeze(2), diff_m_mk.unsqueeze(1)), count_per_class)
 
+        S_w_k = torch.bmm(diff_src_mk.view(count_classes * count_per_class, count_feature, 1), diff_src_mk.view(count_classes * count_per_class, 1, count_feature))
+        S_b_k = count_per_class * torch.bmm(diff_m_mk.view(count_classes, count_feature, 1), diff_m_mk.view(count_classes, 1, count_feature))
+        """
+        S_w_k = None
+        S_b_k = None
+        for classes in range(src_seq.size()[0]):
+            S_w_k_tmp = torch.matmul(diff_src_mk[classes].transpose(0, 1), diff_src_mk[classes]).unsqueeze(0)
+            S_b_k_tmp = torch.matmul(diff_m_mk[classes].unsqueeze(1), diff_m_mk[classes].unsqueeze(0)).unsqueeze(0)
+
+            if S_w_k is None:
+                S_w_k = S_w_k_tmp
+            else:
+                S_w_k = torch.cat((S_w_k, S_w_k_tmp), 0)
+
+            if S_b_k is None:
+                S_b_k = S_b_k_tmp
+            else:
+                S_b_k = torch.cat((S_w_k, S_b_k_tmp), 0)
+        """
         return (torch.sum(S_w_k, dim=0) / count), (torch.sum(S_b_k, dim=0) / count), mean, count, count_per_class
 
     def fit_model(self, src_seq):
