@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License")
 
 from pynn.io.audio_seq import SpectroDataset
-from pynn.io.text_seq import TextSeqDataset, TextPairDataset
+from pynn.io.text_seq import TextSeqDataset, TextPairDataset, TextFeatureDataset
 from pynn.trainer.adam_s2s import train_model as train_s2s
 from pynn.trainer.plda import train_model as train_plda
 from pynn.trainer.adam_ctc import train_model as train_ctc
@@ -20,16 +20,11 @@ def print_model(model):
 def train_plda_model(model, args, device, n_device=1):
     dist, verbose = n_device > 1, device == 0
     #TODO: use different datalaoder
-    data = SpectroDataset(args.train_scp, args.train_target, downsample=args.downsample,
-                             sort_src=True, mean_sub=args.mean_sub, var_norm=args.var_norm,
-                             spec_drop=args.spec_drop, spec_bar=args.spec_bar, spec_ratio=args.spec_ratio,
-                             time_stretch=args.time_stretch, time_win=args.time_win,
-                             fp16=args.fp16, preload=args.preload, threads=2, verbose=verbose)
-    if dist: tr_data.partition(device, n_device)
+    data = TextFeatureDataset(args.train_embeddings, args.train_classes, threads=1, verbose=verbose)
+    if dist: data.partition(device, n_device)
 
     cfg = {'model_path': args.model_path }
-    datasets = (classes, data)
-    train_plda(model, datasets, device, cfg, fp16=args.fp16, dist=dist)
+    train_plda(model, data, device, cfg, fp16=args.fp16, dist=dist)
     
 def train_s2s_model(model, args, device, n_device=1):
     dist, verbose = n_device > 1, device == 0
