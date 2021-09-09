@@ -15,27 +15,25 @@ class PLDA(nn.Module):
 
         self.dropout_net = nn.Dropout(dropout)
 
-    def compute_scatter_matrices(self, src_seq, src_mask):
-        count_per_class = torch.count_nonzero(src_mask)
-        count = sum(count_per_class)
+    def compute_scatter_matrices(self, src_seq):
+        count_per_class = src_seq.size()[1]
+        count = src_seq.size()[0] * count_per_class
 
-        mean_per_class = torch.sum(src_seq, 1) / count_per_class
-        mean = torch.mean(mean_per_class)
+        mean_per_class = torch.mean(src_seq, 1)
+        mean = torch.mean(src_seq, (0, 1))
 
-        diff_src_mk = src_seq - mean_per_class.unsqueeze(1).expand(-1, src_seq.size(1), -1)
-        diff_m_mk = mean_per_class - mean.unsqueeze(1).expand(-1, mean_per_class.size(1))
+        diff_src_mk = src_seq - mean_per_class.unsqueeze(1).expand(-1, src_seq.size()[1], -1)
+        diff_m_mk = mean_per_class - mean.unsqueeze(0).expand(mean_per_class.size()[0], -1)
 
         S_w_k = torch.matmul(diff_src_mk.transpose(1, 2), diff_src_mk)
         S_b_k = torch.matmul(torch.matmul(diff_m_mk.unsqueeze(2), diff_m_mk.unsqueeze(1)), count_per_class)
 
         return (torch.sum(S_w_k, dim=0) / count), (torch.sum(S_b_k, dim=0) / count), mean, count, count_per_class
 
-    def fit_model(self, src_seq, src_mask):
+    def fit_model(self, src_seq):
         # matching https://ravisoji.com/assets/papers/ioffe2006probabilistic.pdf
 
-        S_w, S_b, mean, count, count_per_class = self.compute_scatter_matrices(src_seq, src_mask)
-        assert(torch.max(count_per_class) == torch.min(count_per_class), "All Classes need same count of items")
-        count_per_class = torch.min(count_per_class)
+        S_w, S_b, mean, count, count_per_class = self.compute_scatter_matrices(src_seq)
 
         # Calculate LDA Projection
         # S_b * w = lambda * S_w * w
