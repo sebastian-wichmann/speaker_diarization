@@ -10,10 +10,16 @@ import math
 
 
 class PLDA(nn.Module):
-    def __init__(self, dropout=0.2, dropconnect=0.2):
+    def __init__(self, dropout=0.2, initialSoftmax = True):
         super(PLDA, self).__init__()
 
+        self.dropout = dropout > 0
+        if self.dropout > 0:
         self.dropout_net = nn.Dropout(dropout)
+
+        self.softmax = initialSoftmax
+        if self.softmax:
+            self.softmax_net = nn.Softmax(-1)
 
     def compute_scatter_matrices(self, src_seq):
         count_classes = src_seq.size()[0]
@@ -113,11 +119,16 @@ class PLDA(nn.Module):
         
         return math.prod(to_mult)
 
-    def forward(self, src_seq, src_mask, tgt_seq):
-        seq = self.dropout_net(src_seq)
+    def forward(self, seq):
+        if self.softmax:
+            seq = self.softmax_net(seq.float())
+        
+        if self.dropout:
+            seq = self.dropout_net(seq)
 
         if self.training:
-            self.fit_model(seq, src_mask)
+            self.fit_model(seq)
+            return
 
         latent = torch.matmul(self.A_inverse, (seq - self.mean))
 
