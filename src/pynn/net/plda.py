@@ -7,16 +7,17 @@ import torch.nn as nn
 import torch.linalg as lin
 import torch.nn.functional as F
 import math
+from scipy.linalg import eigh
 
 
 class PLDA(nn.Module):
     def __init__(self, dropout=0.2, initialSoftmax = True):
         super(PLDA, self).__init__()
-
+        
         self.dropout = dropout > 0
         if self.dropout > 0:
-        self.dropout_net = nn.Dropout(dropout)
-
+            self.dropout_net = nn.Dropout(dropout)
+        
         self.softmax = initialSoftmax
         if self.softmax:
             self.softmax_net = nn.Softmax(-1)
@@ -32,7 +33,7 @@ class PLDA(nn.Module):
 
         diff_src_mk = src_seq - mean_per_class.unsqueeze(1).expand(-1, src_seq.size()[1], -1)
         diff_m_mk = mean_per_class - mean.unsqueeze(0).expand(mean_per_class.size()[0], -1)
-
+        
 
         S_w_k = torch.bmm(diff_src_mk.view(count_classes * count_per_class, count_feature, 1), diff_src_mk.view(count_classes * count_per_class, 1, count_feature))
         S_b_k = count_per_class * torch.bmm(diff_m_mk.view(count_classes, count_feature, 1), diff_m_mk.view(count_classes, 1, count_feature))
@@ -62,9 +63,17 @@ class PLDA(nn.Module):
 
         # Calculate LDA Projection
         # S_b * w = lambda * S_w * w
-        _, W = lin.eig(lin.solve(S_w, S_b))
+        # TODO: Error here; eig not working
+        #_, W = lin.eig(lin.solve(S_w.float(), S_b.float()))
         # transpose W
-        Wt = torch.transpose(W, 0, 1)
+
+        np_W = eigh(S_b.cpu().numpy(), S_w.cpu().numpy())
+        type = S_w.dtype
+        device = S_w.device
+
+        W = torch.tensor(np_W, dtype=S_w.dtype, device=None)
+
+        Wt = torch.transpose(W.real, 0, 1)
 
         #
         lambda_b = torch.diagonal(torch.matmul(torch.matmul(Wt, S_b), W))

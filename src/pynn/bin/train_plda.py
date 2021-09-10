@@ -29,8 +29,7 @@ parser.add_argument('--fp16', help='fp16 or not', action='store_true')
 
 def create_model(args, device):
     params = {
-        'dropout': args.dropout,
-        'dropconnect': args.dropconnect}
+        'dropout': args.dropout}
     model = PLDA(**params)
     save_object_param(model, params, args.model_path + '/model.cfg')
     return model
